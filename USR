@@ -1,0 +1,58 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_ARITH.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+
+entity shiftregister is
+    Port (
+        clk     : in  STD_LOGIC_VECTOR(0 downto 0);
+        reset   : in  STD_LOGIC_VECTOR(0 downto 0);
+        datain  : in  STD_LOGIC_VECTOR(3 downto 0);
+        sel     : in  STD_LOGIC_VECTOR(1 downto 0);
+        sl_in   : in  STD_LOGIC_VECTOR(0 downto 0);
+        sr_in   : in  STD_LOGIC_VECTOR(0 downto 0);
+        dataout : out STD_LOGIC_VECTOR(3 downto 0)
+    );
+end shiftregister;
+
+architecture Behavioral of shiftregister is
+
+    signal TEMP : STD_LOGIC_VECTOR(3 downto 0) := "0000";
+
+begin
+
+    process(reset, clk)
+    begin
+        if reset(0) = '1' then
+            TEMP <= "0000";
+
+        elsif rising_edge(clk(0)) then
+
+            case sel is
+
+                -- 11: Parallel Load
+                when "11" =>
+                    TEMP <= datain;
+
+                -- 00: Hold
+                when "00" =>
+                    null;
+
+                -- 01: Left Shift
+                when "01" =>
+                    TEMP <= TEMP(2 downto 0) & sl_in(0);
+
+                -- 10: Right Shift
+                when "10" =>
+                    TEMP <= sr_in(0) & TEMP(3 downto 1);
+
+                when others =>
+                    null;
+
+            end case;
+        end if;
+    end process;
+
+    dataout <= TEMP;
+
+end Behavioral;
