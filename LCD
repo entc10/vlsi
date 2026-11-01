@@ -1,0 +1,134 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+use IEEE.STD_LOGIC_ARITH.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+
+entity LCD_FINAL1 is
+    Port ( clk_12Mhz : in  STD_LOGIC_VECTOR (0 downto 0);
+           lcd_rs : out  STD_LOGIC_VECTOR (0 downto 0);
+           lcd_en : out  STD_LOGIC_VECTOR (0 downto 0);
+           lcd_data : out  STD_LOGIC_VECTOR (7 downto 0);
+           rst : in  STD_LOGIC_VECTOR (0 downto 0));
+end LCD_FINAL1;
+
+architecture Behavioral of LCD_FINAL1 is
+signal clk_count : integer range 0 to 200000 := 0;
+    signal state     : integer range 0 to 20 := 0;
+    signal rs_reg    : std_logic := '0';
+    signal en_reg    : std_logic := '0';
+    signal data_reg  : std_logic_vector(7 downto 0) := (others => '0');
+
+begin
+  lcd_rs(0) <= rs_reg;
+    lcd_en(0)     <= en_reg;
+    lcd_data  <= data_reg;
+
+    process(clk_12Mhz(0), rst(0))
+    begin
+        if rst(0) = '1' then
+            clk_count <= 0;
+            state     <= 0;
+            rs_reg    <= '0';
+            en_reg    <= '0';
+            data_reg  <= (others => '0');
+
+        elsif rising_edge(clk_12Mhz(0)) then
+
+            if clk_count < 200000 then
+                clk_count <= clk_count + 1;
+            else
+                clk_count <= 0;
+
+                case state is
+
+                    -- LCD initialization
+                    when 0 =>
+                        rs_reg   <= '0';
+                        data_reg <= x"38"; -- 8-bit, 2-line LCD
+                        en_reg   <= '1';
+                        state    <= 1;
+
+                    when 1 =>
+                        en_reg <= '0';
+                        state  <= 2;
+
+                    when 2 =>
+                        data_reg <= x"0C"; -- Display ON, cursor OFF
+                        en_reg   <= '1';
+                        state    <= 3;
+
+                    when 3 =>
+                        en_reg <= '0';
+                        state  <= 4;
+
+                    when 4 =>
+                        data_reg <= x"01"; -- Clear display
+                        en_reg   <= '1';
+                        state    <= 5;
+
+                    when 5 =>
+                        en_reg <= '0';
+                        state  <= 6;
+
+                    when 6 =>
+                        data_reg <= x"06"; -- Entry mode
+                        en_reg   <= '1';
+                        state    <= 7;
+
+                    when 7 =>
+                        en_reg <= '0';
+                        state  <= 8;
+
+                    -- Display S
+                    when 8 =>
+                        rs_reg   <= '1';
+                        data_reg <= x"53"; -- S
+                        en_reg   <= '1';
+                        state    <= 9;
+
+                    when 9 =>
+                        en_reg <= '0';
+                        state  <= 10;
+
+                    -- Display P
+                    when 10 =>
+                        data_reg <= x"50"; -- P
+                        en_reg   <= '1';
+                        state    <= 11;
+
+                    when 11 =>
+                        en_reg <= '0';
+                        state  <= 12;
+
+                    -- Display P
+                    when 12 =>
+                        data_reg <= x"50"; -- P
+                        en_reg   <= '1';
+                        state    <= 13;
+
+                    when 13 =>
+                        en_reg <= '0';
+                        state  <= 14;
+
+                    -- Display U
+                    when 14 =>
+                        data_reg <= x"55"; -- U
+                        en_reg   <= '1';
+                        state    <= 15;
+
+                    when 15 =>
+                        en_reg <= '0';
+                        state  <= 16;
+
+                    -- Keep display stable
+                    when others =>
+                        en_reg <= '0';
+                        state  <= 18;
+
+                end case;
+            end if;
+        end if;
+    end process;
+
+end Behavioral;
